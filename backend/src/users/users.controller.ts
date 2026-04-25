@@ -27,6 +27,12 @@ export class UsersController {
     return this.usersService.updateNick(req.user.id, nick);
   }
 
+  @Get('me/stats')
+  @UseGuards(JwtAuthGuard)
+  async getStats(@Request() req: any) {
+    return this.usersService.getUserStats(req.user.id);
+  }
+
   @Get('check-nick')
   async checkNick(@Query('nick') nick: string) {
     const available = await this.usersService.checkNickAvailable(nick);

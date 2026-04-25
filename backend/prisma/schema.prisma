@@ -15,7 +15,8 @@ model User {
   id              String    @id @default(uuid()) @db.Uuid
   email           String    @unique
   nick            String    @unique
-  passwordHash    String    @map("password_hash")
+  passwordHash    String?   @map("password_hash")
+  googleId        String?   @unique @map("google_id")
   plan            Plan      @default(FREE)
   planExpiresAt   DateTime? @map("plan_expires_at")
   xp              Int       @default(0)
@@ -31,6 +32,7 @@ model User {
   studySessions StudySession[]
   rankingCache  RankingCache[]
   subscription  Subscription?
+  badges        UserBadge[]
 
   @@index([email])
   @@map("users")
@@ -41,6 +43,21 @@ enum Plan {
   PREMIUM
 
   @@map("plan")
+}
+
+// ─── Conquistas / Badges ────────────────────────────────────
+
+model UserBadge {
+  id        String   @id @default(uuid()) @db.Uuid
+  userId    String   @map("user_id") @db.Uuid
+  badgeId   String   @map("badge_id") // Hardcoded ID representing the badge (e.g., 'survivor', 'biologist')
+  earnedAt  DateTime @default(now()) @map("earned_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, badgeId])
+  @@index([userId])
+  @@map("user_badges")
 }
 
 // ─── Matérias / Disciplinas ─────────────────────────────────

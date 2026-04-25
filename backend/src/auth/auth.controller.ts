@@ -10,6 +10,9 @@ import {
 import { AuthService } from './auth.service';
 import { RegisterDto, LoginDto, RefreshTokenDto } from './dto/auth.dto';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
+import { AuthGuard } from '@nestjs/passport';
+import { Get, Req, Res } from '@nestjs/common';
+import type { Response } from 'express';
 
 @Controller('auth')
 export class AuthController {
@@ -43,5 +46,23 @@ export class AuthController {
   async logout(@Request() req: any) {
     await this.authService.logout(req.user.id);
     return { message: 'Logout efectuado com sucesso' };
+  }
+
+  @Get('google')
+  @UseGuards(AuthGuard('google'))
+  async googleAuth(@Req() req: any) {
+    // Initiates the Google OAuth flow
+  }
+
+  @Get('google/callback')
+  @UseGuards(AuthGuard('google'))
+  async googleAuthRedirect(@Req() req: any, @Res() res: Response) {
+    // req.user contains the user and tokens returned by validateGoogleUser
+    const { accessToken, refreshToken, user } = req.user;
+    
+    // Redirect back to frontend with tokens
+    // We pass tokens via URL hash or query params so the frontend can store them
+    const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
+    res.redirect(`${frontendUrl}/auth/callback?accessToken=${accessToken}&refreshToken=${refreshToken}`);
   }
 }

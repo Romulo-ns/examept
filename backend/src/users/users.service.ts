@@ -79,9 +79,44 @@ export class UsersService {
             studySessions: true,
           },
         },
+        badges: true,
       },
     });
 
     return user;
+  }
+
+  async getUserStats(userId: string) {
+    const attempts = await this.prisma.attempt.findMany({
+      where: { userId },
+      include: {
+        question: {
+          include: {
+            subject: true
+          }
+        }
+      }
+    });
+
+    const subjectStats: Record<string, { total: number; correct: number }> = {};
+
+    attempts.forEach(attempt => {
+      const subjectName = attempt.question.subject.name;
+      if (!subjectStats[subjectName]) {
+        subjectStats[subjectName] = { total: 0, correct: 0 };
+      }
+      subjectStats[subjectName].total++;
+      if (attempt.isCorrect) {
+        subjectStats[subjectName].correct++;
+      }
+    });
+
+    const radarData = Object.keys(subjectStats).map(subject => ({
+      subject,
+      score: Math.round((subjectStats[subject].correct / subjectStats[subject].total) * 100),
+      fullMark: 100
+    }));
+
+    return { radarData };
   }
 }

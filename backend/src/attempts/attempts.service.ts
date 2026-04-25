@@ -63,6 +63,10 @@ export class AttemptsService {
       }
     }
 
+    // Calculate time bonus (if under 60 seconds)
+    const safeTimeSpentMs = dto.timeSpentMs ? Math.min(dto.timeSpentMs, 3600000) : 0;
+    const timeBonus = safeTimeSpentMs > 0 && safeTimeSpentMs < 60000 ? Math.floor((60000 - safeTimeSpentMs) / 5000) : 0;
+
     // Create attempt
     const attempt = await this.prisma.attempt.create({
       data: {
@@ -71,7 +75,7 @@ export class AttemptsService {
         optionId: dto.optionId,
         isCorrect,
         hintUsed: dto.hintUsed || false,
-        timeSpentMs: dto.timeSpentMs,
+        timeSpentMs: safeTimeSpentMs,
         xpEarned,
       },
     });

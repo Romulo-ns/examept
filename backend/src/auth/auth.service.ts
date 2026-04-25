@@ -83,6 +83,10 @@ export class AuthService {
       throw new UnauthorizedException('Credenciais inválidas');
     }
 
+    if (!user.passwordHash) {
+      throw new UnauthorizedException('Por favor, faz login com o Google');
+    }
+
     const isPasswordValid = await bcrypt.compare(
       dto.password,
       user.passwordHash,
@@ -147,6 +151,76 @@ export class AuthService {
     });
 
     return tokens;
+  }
+
+  async validateGoogleUser(profile: { googleId: string; email: string; nick: string }) {
+    // Check if user exists with this google ID
+    let user = await this.prisma.user.findUnique({
+      where: { googleId: profile.googleId },
+    });
+
+    if (!user) {
+      // Check if user exists with this email
+      user = await this.prisma.user.findUnique({
+        where: { email: profile.email },
+      });
+
+      if (user) {
+        // Link google account to existing user
+        user = await this.prisma.user.update({
+          where: { id: user.id },
+          data: { googleId: profile.googleId },
+        });
+      } else {
+        // Create new user
+        // Ensure nick is unique
+        let baseNick = profile.nick.replace(/\s+/g, '');
+        let nick = baseNick;
+        let counter = 1;
+        
+        while (true) {
+          const existingNick = await this.prisma.user.findFirst({
+            where: { nick: { equals: nick, mode: 'insensitive' } },
+          });
+          if (!existingNick) break;
+          nick = `${baseNick}${counter}`;
+          counter++;
+        }
+
+        user = await this.prisma.user.create({
+          data: {
+            email: profile.email,
+            nick,
+            googleId: profile.googleId,
+          },
+        });
+      }
+    }
+
+    const tokens = await this.generateTokens(
+      user.id,
+      user.email,
+      user.nick,
+      user.plan,
+    );
+
+    await this.prisma.user.update({
+      where: { id: user.id },
+      data: { refreshToken: await bcrypt.hash(tokens.refreshToken, 10) },
+    });
+
+    return {
+      user: {
+        id: user.id,
+        email: user.email,
+        nick: user.nick,
+        plan: user.plan,
+        xp: user.xp,
+        level: user.level,
+        streak: user.streak,
+      },
+      ...tokens,
+    };
   }
 
   async logout(userId: string) {
