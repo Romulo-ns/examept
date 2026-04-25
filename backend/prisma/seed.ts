@@ -13,6 +13,19 @@ const prisma = new PrismaClient({ adapter });
 async function main() {
   console.log('🌱 Seeding ExamPT database...');
 
+  // 0. Clean database
+  console.log('🗑️ Cleaning database...');
+  await prisma.userBadge.deleteMany();
+  await prisma.rankingCache.deleteMany();
+  await prisma.attempt.deleteMany();
+  await prisma.studySession.deleteMany();
+  await prisma.subscription.deleteMany();
+  await prisma.option.deleteMany();
+  await prisma.question.deleteMany();
+  await prisma.subject.deleteMany();
+  await prisma.user.deleteMany();
+  console.log('✅ Database cleaned');
+
   // 1. Subjects
   const matA = await prisma.subject.upsert({
     where: { slug: 'mat-a' },
