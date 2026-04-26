@@ -9,6 +9,12 @@ type User = {
   xp: number;
   level: number;
   streak: number;
+  createdAt: string;
+  badges?: any[];
+  subscription?: {
+    status: string;
+    currentPeriodEnd?: string;
+  } | null;
 };
 
 interface AppState {

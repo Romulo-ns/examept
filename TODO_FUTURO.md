@@ -17,9 +17,9 @@ Este documento contém a lista de tarefas e funcionalidades planeadas para o fut
 
 ## 🌍 3. Deployment (Lançar o Projeto na Internet)
 **Objetivo:** Colocar a aplicação online para os alunos usarem.
-- [ ] **Base de Dados:** Criar uma base de dados PostgreSQL alojada na cloud (ex: Supabase ou Neon).
-- [ ] **Backend:** Alojamento da API NestJS num serviço como o Render ou Railway.
-- [ ] **Frontend:** Alojamento da plataforma Next.js na Vercel.
+- [x] **Base de Dados:** Criar uma base de dados PostgreSQL alojada na cloud (Supabase configurado).
+- [/] **Backend:** Alojamento da API NestJS no Railway (Preparação concluída).
+- [/] **Frontend:** Alojamento da plataforma Next.js na Vercel (Preparação concluída).
 - [ ] Comprar um domínio (ex: `examept.pt`) e configurá-lo na Vercel.
 
 ## 📚 4. População da Base de Dados (Conteúdo)
