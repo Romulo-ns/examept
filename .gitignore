@@ -28,3 +28,6 @@ npm-debug.log*
 
 # Coverage
 coverage/
+
+# Executables
+*.exe

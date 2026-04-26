@@ -16,6 +16,12 @@ export class StripeController {
     return this.stripeService.createCheckoutSession(req.user.id, plan);
   }
 
+  @Post('cancel')
+  @UseGuards(JwtAuthGuard)
+  async cancelSubscription(@Request() req: any) {
+    return this.stripeService.cancelSubscription(req.user.id);
+  }
+
   @Post('webhook')
   async handleWebhook(
     @Headers('stripe-signature') signature: string,

@@ -80,6 +80,7 @@ export class UsersService {
           },
         },
         badges: true,
+        subscription: true,
       },
     });
 

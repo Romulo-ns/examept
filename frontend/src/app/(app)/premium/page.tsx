@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { useStore } from "@/store/useStore";
 import api from "@/lib/api";
@@ -12,6 +12,52 @@ export default function PremiumPage() {
   const { user } = useStore();
   const [isAnnual, setIsAnnual] = useState(true);
   const [isLoading, setIsLoading] = useState<string | null>(null);
+
+  const [profile, setProfile] = useState<any>(null);
+  const [isFetchingProfile, setIsFetchingProfile] = useState(true);
+  const [isCanceling, setIsCanceling] = useState(false);
+
+  useEffect(() => {
+    const fetchProfile = async () => {
+      try {
+        const response = await api.get('/users/me');
+        setProfile(response.data);
+      } catch (error) {
+        console.error("Erro a obter perfil", error);
+      } finally {
+        setIsFetchingProfile(false);
+      }
+    };
+    
+    if (user) {
+      fetchProfile();
+    } else {
+      setIsFetchingProfile(false);
+    }
+  }, [user]);
+
+  const isPremium = profile ? profile.plan === 'PREMIUM' : user?.plan === 'PREMIUM';
+  const subscription = profile?.subscription;
+
+  const handleCancelSubscription = async () => {
+    if (!confirm('Tens a certeza que queres cancelar a tua assinatura? Vais perder o acesso ao plano Premium no final do período que já pagaste.')) {
+      return;
+    }
+    
+    setIsCanceling(true);
+    try {
+      await api.post('/stripe/cancel');
+      alert('Assinatura cancelada com sucesso. O teu plano Premium continuará ativo até ao final do período.');
+      // Refresh profile
+      const response = await api.get('/users/me');
+      setProfile(response.data);
+    } catch (error) {
+      console.error("Erro ao cancelar", error);
+      alert('Ocorreu um erro ao cancelar a assinatura. Tenta novamente.');
+    } finally {
+      setIsCanceling(false);
+    }
+  };
 
   const handleSubscribe = async (plan: 'monthly' | 'annual') => {
     setIsLoading(plan);
@@ -28,9 +74,10 @@ export default function PremiumPage() {
     }
   };
 
-  const isPremium = user?.plan === 'PREMIUM';
-
   if (isPremium) {
+    const isCanceled = subscription?.status === 'canceled_at_period_end' || subscription?.status === 'canceled';
+    const periodEnd = subscription?.currentPeriodEnd ? new Date(subscription.currentPeriodEnd).toLocaleDateString('pt-PT') : 'Desconhecida';
+
     return (
       <div className="max-w-4xl mx-auto py-12 text-center space-y-6">
         <div className="flex justify-center mb-6">
@@ -44,6 +91,50 @@ export default function PremiumPage() {
         <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
           Obrigado por apoiares o ExamPT. Tens acesso ilimitado a todas as funcionalidades da plataforma.
         </p>
+
+        {isFetchingProfile ? (
+          <div className="flex justify-center py-8">
+            <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          </div>
+        ) : (
+          <div className="mt-8 max-w-md mx-auto bg-card border border-white/10 rounded-xl p-6 text-left shadow-lg">
+            <h3 className="text-lg font-semibold mb-4 text-center">Detalhes da Assinatura</h3>
+            
+            <div className="space-y-3 mb-6">
+              <div className="flex justify-between items-center pb-3 border-b border-white/5">
+                <span className="text-muted-foreground">Plano Atual</span>
+                <span className="font-medium text-yellow-500">Premium</span>
+              </div>
+              <div className="flex justify-between items-center pb-3 border-b border-white/5">
+                <span className="text-muted-foreground">Estado</span>
+                {isCanceled ? (
+                  <span className="font-medium text-orange-400">Cancela no fim do período</span>
+                ) : (
+                  <span className="font-medium text-emerald-400">Ativa</span>
+                )}
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-muted-foreground">Válida até</span>
+                <span className="font-medium">{periodEnd}</span>
+              </div>
+            </div>
+
+            {!isCanceled && (
+              <Button 
+                variant="destructive" 
+                className="w-full bg-red-500/10 text-red-500 hover:bg-red-500/20 border border-red-500/20 transition-colors"
+                onClick={handleCancelSubscription}
+                disabled={isCanceling}
+              >
+                {isCanceling ? (
+                  <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> A cancelar...</>
+                ) : (
+                  'Cancelar Assinatura'
+                )}
+              </Button>
+            )}
+          </div>
+        )}
       </div>
     );
   }

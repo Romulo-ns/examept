@@ -24,10 +24,25 @@
 ```bash
 cd backend
 npm install
-cp .env.example .env  # configurar variáveis
+cp .env.example .env  # configurar variáveis (incluindo Stripe)
 npx prisma migrate dev
 npx prisma db seed
 npm run start:dev
+```
+
+#### Stripe (Desenvolvimento Local)
+Para testar os pagamentos e webhooks localmente, é necessário o Stripe CLI:
+1. Garanta que o `stripe.exe` está na pasta `backend`.
+2. Num terminal separado:
+```bash
+npm run stripe:listen
+```
+3. Use cartões de teste do Stripe (ex: 4242 4242...) para simular compras.
+
+#### Reset de Dados
+Para limpar subscrições de teste e voltar ao plano FREE:
+```bash
+node reset.js
 ```
 
 ### Frontend
@@ -35,7 +50,7 @@ npm run start:dev
 ```bash
 cd frontend
 npm install
-cp .env.example .env.local  # configurar variáveis
+cp .env.example .env.local
 npm run dev
 ```
 
@@ -43,8 +58,8 @@ npm run dev
 
 ```
 ExamePT/
-├── frontend/     # Next.js App Router
-├── backend/      # NestJS API
+├── frontend/     # Next.js 14 App Router
+├── backend/      # NestJS API (Node + Prisma)
 └── README.md
 ```
 
