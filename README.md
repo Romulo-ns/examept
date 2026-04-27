@@ -57,7 +57,7 @@ npm run dev
 ## Estrutura
 
 ```
-ExamePT/
+ExamPT/
 ├── frontend/     # Next.js 14 App Router
 ├── backend/      # NestJS API (Node + Prisma)
 └── README.md

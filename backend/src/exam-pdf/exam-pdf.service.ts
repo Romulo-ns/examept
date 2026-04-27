@@ -213,7 +213,7 @@ export class ExamPdfService {
           .fontSize(8)
           .fillColor('#999999')
           .font('Helvetica')
-          .text('Gerado por ExamPT — examept.pt', { align: 'center' });
+          .text('Gerado por ExamPT — exampt.pt', { align: 'center' });
 
         doc.end();
       } catch (err) {

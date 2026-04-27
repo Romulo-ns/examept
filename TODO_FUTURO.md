@@ -20,7 +20,7 @@ Este documento contém a lista de tarefas e funcionalidades planeadas para o fut
 - [x] **Base de Dados:** Criar uma base de dados PostgreSQL alojada na cloud (Supabase configurado).
 - [/] **Backend:** Alojamento da API NestJS no Railway (Preparação concluída).
 - [/] **Frontend:** Alojamento da plataforma Next.js na Vercel (Preparação concluída).
-- [ ] Comprar um domínio (ex: `examept.pt`) e configurá-lo na Vercel.
+- [ ] Comprar um domínio (ex: `exampt.pt`) e configurá-lo na Vercel.
 
 ## 📚 4. População da Base de Dados (Conteúdo)
 **Objetivo:** Inserir perguntas reais dos exames nacionais.
