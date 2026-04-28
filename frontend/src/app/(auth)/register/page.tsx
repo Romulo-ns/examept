@@ -12,7 +12,7 @@ import { useAuth, registerSchema, type RegisterData } from "@/hooks/useAuth";
 
 export default function RegisterPage() {
   const { register: registerUser, isLoading, error, checkNickAvailability } = useAuth();
-  const [nickStatus, setNickStatus] = useState<'idle' | 'checking' | 'available' | 'taken'>('idle');
+  const [nickStatus, setNickStatus] = useState<'idle' | 'checking' | 'available' | 'taken' | 'error'>('idle');
   
   const {
     register,
@@ -34,8 +34,8 @@ export default function RegisterPage() {
 
     const timer = setTimeout(async () => {
       setNickStatus('checking');
-      const isAvailable = await checkNickAvailability(nickValue);
-      setNickStatus(isAvailable ? 'available' : 'taken');
+      const status = await checkNickAvailability(nickValue);
+      setNickStatus(status);
     }, 500);
 
     return () => clearTimeout(timer);
@@ -99,6 +99,7 @@ export default function RegisterPage() {
                     {nickStatus === 'checking' && <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />}
                     {nickStatus === 'available' && !errors.nick && <CheckCircle2 className="h-4 w-4 text-green-500" />}
                     {nickStatus === 'taken' && <XCircle className="h-4 w-4 text-destructive" />}
+                    {nickStatus === 'error' && <XCircle className="h-4 w-4 text-amber-500" />}
                   </div>
                 </div>
                 {errors.nick && (
@@ -106,6 +107,9 @@ export default function RegisterPage() {
                 )}
                 {!errors.nick && nickStatus === 'taken' && (
                   <p className="text-xs text-destructive">Este nick já está em uso</p>
+                )}
+                {!errors.nick && nickStatus === 'error' && (
+                  <p className="text-xs text-amber-500">Erro ao verificar disponibilidade. Tenta novamente.</p>
                 )}
                 {!errors.nick && nickStatus === 'available' && (
                   <p className="text-xs text-green-500">Nick disponível!</p>

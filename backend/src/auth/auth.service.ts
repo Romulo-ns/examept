@@ -18,9 +18,12 @@ export class AuthService {
   ) {}
 
   async register(dto: RegisterDto) {
+    const email = dto.email.trim();
+    const nick = dto.nick.trim();
+
     // Check if email already exists
     const existingEmail = await this.prisma.user.findUnique({
-      where: { email: dto.email },
+      where: { email },
     });
     if (existingEmail) {
       throw new ConflictException('Este email já está registado');
@@ -28,7 +31,7 @@ export class AuthService {
 
     // Check if nick already exists (case-insensitive)
     const existingNick = await this.prisma.user.findFirst({
-      where: { nick: { equals: dto.nick, mode: 'insensitive' } },
+      where: { nick: { equals: nick, mode: 'insensitive' } },
     });
     if (existingNick) {
       throw new ConflictException('Este nick já está em uso');
@@ -40,8 +43,8 @@ export class AuthService {
     // Create user
     const user = await this.prisma.user.create({
       data: {
-        email: dto.email,
-        nick: dto.nick,
+        email,
+        nick,
         passwordHash,
       },
     });
