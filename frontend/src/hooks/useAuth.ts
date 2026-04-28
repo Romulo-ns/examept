@@ -79,12 +79,13 @@ export function useAuth() {
     }
   };
 
-  const checkNickAvailability = async (nick: string) => {
+  const checkNickAvailability = async (nick: string): Promise<'available' | 'taken' | 'error'> => {
     try {
-      const response = await api.get(`/users/check-nick?nick=${nick}`);
-      return response.data.available as boolean;
+      const response = await api.get(`/users/check-nick?nick=${encodeURIComponent(nick)}`);
+      return response.data.available ? 'available' : 'taken';
     } catch (err) {
-      return false;
+      console.error('Erro ao verificar nick:', err);
+      return 'error';
     }
   };
 

@@ -23,9 +23,11 @@ export class UsersService {
   }
 
   async checkNickAvailable(nick: string, excludeUserId?: string) {
+    if (!nick) return true;
+    
     const existing = await this.prisma.user.findFirst({
       where: {
-        nick: { equals: nick, mode: 'insensitive' },
+        nick: { equals: nick.trim(), mode: 'insensitive' },
         ...(excludeUserId ? { id: { not: excludeUserId } } : {}),
       },
     });
