@@ -1,0 +1,210 @@
+// ExamPT — Prisma Schema
+// PostgreSQL hosted on Supabase
+
+generator client {
+  provider        = "prisma-client-js"
+  output          = "../src/prisma/client"
+  previewFeatures = ["driverAdapters"]
+  binaryTargets   = ["native", "rhel-openssl-1.0.x", "rhel-openssl-3.0.x"]
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ─── Utilizadores ───────────────────────────────────────────
+
+model User {
+  id             String    @id @default(uuid()) @db.Uuid
+  email          String    @unique
+  nick           String    @unique
+  passwordHash   String?   @map("password_hash")
+  googleId       String?   @unique @map("google_id")
+  plan           Plan      @default(FREE)
+  planExpiresAt  DateTime? @map("plan_expires_at")
+  xp             Int       @default(0)
+  level          Int       @default(1)
+  streak         Int       @default(0)
+  lastActivityAt DateTime? @map("last_activity_at")
+  refreshToken   String?   @map("refresh_token")
+  createdAt      DateTime  @default(now()) @map("created_at")
+  updatedAt      DateTime  @updatedAt @map("updated_at")
+  nickChangedAt  DateTime? @map("nick_changed_at")
+
+  attempts      Attempt[]
+  studySessions StudySession[]
+  rankingCache  RankingCache[]
+  subscription  Subscription?
+  badges        UserBadge[]
+
+  @@index([email])
+  @@map("users")
+}
+
+enum Plan {
+  FREE
+  PREMIUM
+
+  @@map("plan")
+}
+
+// ─── Conquistas / Badges ────────────────────────────────────
+
+model UserBadge {
+  id       String   @id @default(uuid()) @db.Uuid
+  userId   String   @map("user_id") @db.Uuid
+  badgeId  String   @map("badge_id") // Hardcoded ID representing the badge (e.g., 'survivor', 'biologist')
+  earnedAt DateTime @default(now()) @map("earned_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, badgeId])
+  @@index([userId])
+  @@map("user_badges")
+}
+
+// ─── Matérias / Disciplinas ─────────────────────────────────
+
+model Subject {
+  id       String  @id @default(uuid()) @db.Uuid
+  name     String
+  slug     String  @unique
+  examCode String? @map("exam_code")
+  isActive Boolean @default(true) @map("is_active")
+
+  questions     Question[]
+  studySessions StudySession[]
+
+  @@map("subjects")
+}
+
+// ─── Questões ───────────────────────────────────────────────
+
+model Question {
+  id                 String       @id @default(uuid()) @db.Uuid
+  subjectId          String       @map("subject_id") @db.Uuid
+  year               Int?
+  examPhase          String?      @map("exam_phase")
+  text               String
+  difficulty         Int          @default(3)
+  difficultyComputed Float?       @map("difficulty_computed")
+  type               QuestionType @default(MCQ)
+  explanation        String?
+  hint               String?
+  tags               String[]
+  isActive           Boolean      @default(true) @map("is_active")
+  createdAt          DateTime     @default(now()) @map("created_at")
+
+  subject  Subject   @relation(fields: [subjectId], references: [id])
+  options  Option[]
+  attempts Attempt[]
+
+  @@index([subjectId, difficultyComputed])
+  @@index([year])
+  @@map("questions")
+}
+
+enum QuestionType {
+  MCQ
+  TRUE_FALSE
+  OPEN
+
+  @@map("question_type")
+}
+
+// ─── Opções de Resposta ─────────────────────────────────────
+
+model Option {
+  id         String  @id @default(uuid()) @db.Uuid
+  questionId String  @map("question_id") @db.Uuid
+  label      String  @db.Char(1)
+  text       String
+  isCorrect  Boolean @default(false) @map("is_correct")
+  position   Int
+
+  question Question  @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  attempts Attempt[]
+
+  @@map("options")
+}
+
+// ─── Tentativas de Resposta ─────────────────────────────────
+
+model Attempt {
+  id          String   @id @default(uuid()) @db.Uuid
+  userId      String   @map("user_id") @db.Uuid
+  questionId  String   @map("question_id") @db.Uuid
+  optionId    String?  @map("option_id") @db.Uuid
+  isCorrect   Boolean  @map("is_correct")
+  hintUsed    Boolean  @default(false) @map("hint_used")
+  timeSpentMs Int?     @map("time_spent_ms")
+  xpEarned    Int      @default(0) @map("xp_earned")
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  question Question @relation(fields: [questionId], references: [id])
+  option   Option?  @relation(fields: [optionId], references: [id])
+
+  @@index([userId, createdAt(sort: Desc)])
+  @@index([userId, questionId])
+  @@map("attempts")
+}
+
+// ─── Sessões de Estudo ──────────────────────────────────────
+
+model StudySession {
+  id               String    @id @default(uuid()) @db.Uuid
+  userId           String    @map("user_id") @db.Uuid
+  subjectId        String?   @map("subject_id") @db.Uuid
+  questionsTotal   Int       @default(0) @map("questions_total")
+  questionsCorrect Int       @default(0) @map("questions_correct")
+  xpEarned         Int       @default(0) @map("xp_earned")
+  startedAt        DateTime  @default(now()) @map("started_at")
+  endedAt          DateTime? @map("ended_at")
+
+  user    User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  subject Subject? @relation(fields: [subjectId], references: [id])
+
+  @@index([userId, startedAt(sort: Desc)])
+  @@map("study_sessions")
+}
+
+// ─── Ranking Cache ──────────────────────────────────────────
+
+model RankingCache {
+  userId    String        @map("user_id") @db.Uuid
+  period    RankingPeriod
+  score     Int           @default(0)
+  rank      Int?
+  updatedAt DateTime      @default(now()) @updatedAt @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([userId, period])
+  @@index([period, score(sort: Desc)])
+  @@map("ranking_cache")
+}
+
+enum RankingPeriod {
+  WEEK
+  MONTH
+  ALL
+
+  @@map("ranking_period")
+}
+
+// ─── Subscriptions ──────────────────────────────────────────
+
+model Subscription {
+  id                   String    @id @default(uuid()) @db.Uuid
+  userId               String    @unique @map("user_id") @db.Uuid
+  stripeSubscriptionId String?   @unique @map("stripe_subscription_id")
+  stripeCustomerId     String?   @map("stripe_customer_id")
+  status               String?
+  currentPeriodEnd     DateTime? @map("current_period_end")
+  createdAt            DateTime  @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@map("subscriptions")
+}
