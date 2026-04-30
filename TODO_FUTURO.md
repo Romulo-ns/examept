@@ -2,6 +2,15 @@
 
 Este documento contém a lista de tarefas e funcionalidades planeadas para o futuro da plataforma ExamPT. Pode ser exportado para PDF para acompanhamento do projeto.
 
+## 🛠️ 0. Estratégia de Ambientes (Dev & Prod)
+**Objetivo:** Separar completamente o ambiente de desenvolvimento do ambiente de produção para evitar conflitos e instabilidades.
+- [ ] **Ambiente de Produção (Reset):** Apagado (Vercel, Supabase, Render) para recomeçar do zero após estabilizar o Dev.
+- [/] **Ambiente de Developer (Foco Atual):**
+    - [ ] Configurar base de dados local/dev separada.
+    - [ ] Garantir que todas as variáveis de ambiente estão isoladas.
+    - [ ] Testar fluxos críticos localmente antes de qualquer novo deploy.
+
+
 ## 🚀 1. Funcionalidade: Geração de Exames em PDF
 **Objetivo:** Permitir que os alunos (especialmente os Premium) possam descarregar exames personalizados em formato PDF para imprimir e resolver no papel, simulando o ambiente real de exame.
 - [x] Escolher uma biblioteca de geração de PDFs (ex: `pdfmake` no frontend ou `@react-pdf/renderer` ou Puppeteer no backend).
